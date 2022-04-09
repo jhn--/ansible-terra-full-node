@@ -2,3 +2,7 @@
 - hosts: terratestnet-01
   roles:
     - terra
+  vars_prompt:
+    - name: passphrase
+      prompt: Enter keyring passphrase
+      default: password
