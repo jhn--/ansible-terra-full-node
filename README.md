@@ -21,10 +21,6 @@ ssh-key-copy done.
 
 ---
 
-currently ends @ "Start Terrad" which _will_ fail because we need to either join the mainnet, testnet or start a local testnet beforehand.
+Provisions a local testnet full node.
 
-This means prior to "Start Terrad" we ought to have executed `terra init` with ONE of the following in mind
-mainnet - https://github.com/terra-money/core#join-the-mainnet
-testnet - https://github.com/terra-money/core#join-a-testnet
 local testnet - https://github.com/terra-money/core#run-a-single-node-testnet
-
