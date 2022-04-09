@@ -1,5 +1,6 @@
 owner: terradmin
 thome: /home/terradmin
+terradPath: /home/terradmin/go/bin/terrad
 goURL: https://go.dev/dl/go1.18.linux-amd64.tar.gz
 goFile: go1.18.linux-amd64.tar.gz
 
@@ -14,3 +15,9 @@ terraCoreDir: core
 ulimitPath: /etc/security/limits.conf
 
 terraService: /etc/systemd/system/terrad.service
+
+
+# terrad testname details
+testnet_name: localtestnet
+node_monikor: gen01
+account_name: localaccount
