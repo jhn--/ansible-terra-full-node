@@ -1,0 +1,4 @@
+---
+- hosts: terratestnet-01
+  roles:
+    - terra
