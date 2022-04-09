@@ -1,0 +1,129 @@
+---
+- name: "Update Ubuntu"
+  apt:
+    upgrade: yes
+    update_cache: yes
+  become: true
+  register: result
+
+- name: "Install build-essential"
+  apt:
+    name: build-essential
+    state: present
+  become: true
+  when: result is succeeded
+  register: result
+
+- name: "Download Go"
+  get_url:
+    url: '{{ goURL }}'
+    dest: '{{ thome }}/{{ goFile }}'
+  when: result is succeeded
+  register: result
+
+- name: "Unpack Go"
+  unarchive:
+    src: '{{ thome }}/{{ goFile }}'
+    dest: '{{ goDest }}'
+    remote_src: yes
+  when: result is succeeded
+  register: result
+  become: true
+
+- name: "Create Go dir in $HOME"
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: '{{ owner }}'
+    group: '{{ owner }}'
+    mode: 0775
+  with_items:
+    - "{{ thome }}/go"
+    - "{{ thome }}/go/bin"
+  
+- name: "Set Go Env"
+  blockinfile:
+    dest: '{{ thome }}/.bashrc'
+    block: |
+            export GOPATH=$HOME/go
+            export GOBIN=$GOPATH/bin
+            export PATH=$GOBIN:$PATH:/usr/local/go/bin
+    marker: '# {mark} ANSIBLE MANAGED BLOCK - changes for golang'
+    insertafter: EOF
+  when: result is succeeded
+  register: result
+
+- name: "Source .zshrc"
+  shell:
+    cmd: '. ~/.bashrc'
+  when: result is succeeded
+  register: result
+
+- name: "Git Clone Terra Core"
+  git:
+    repo: '{{ terraGit }}'
+    dest: '{{ thome }}/{{ terraCoreDir }}'
+  when: result is succeeded
+  register: result
+
+- name: "Git Checkout Main"
+  shell: 
+    cmd: git checkout main
+    chdir: '{{ thome }}/{{ terraCoreDir }}'
+  when: result is succeeded
+  register: result
+
+- name: "Make Terra"
+  shell:
+    cmd: export GOPATH=$HOME/go && export GOBIN=$GOPATH/bin && export PATH=$GOBIN:$PATH:/usr/local/go/bin && make install
+    chdir: '{{ thome }}/{{ terraCoreDir }}'
+  when: result is succeeded
+  register: result
+
+- name: "Persistent ulimit nofile 65535"
+  blockinfile:
+    dest: '{{ ulimitPath }}'
+    block: |
+            * soft nofile 65535
+            * hard nofile 65535
+    marker: '# {mark} ANSIBLE MANAGED BLOCK - changes for golang'
+    insertafter: EOF
+  when: result is succeeded
+  register: result
+  become: true
+
+- name: "Session ulimit nofile 65535"
+  shell:
+    cmd: ulimit -Sn 65535 && ulimit -Hn 65535
+  when: result is succeeded
+  register: result
+  become: true
+
+- name: "Create Terra Service"
+  copy:
+    src: ../files/terrad.service
+    dest: '{{ terraService }}'
+    owner: root
+    group: root
+    mode: '0644'
+  when: result is succeeded
+  register: result
+  become: true
+
+- name: "Enable Terrad"
+  systemd:
+    name: terrad
+    enabled: yes
+    masked: no
+  when: result is succeeded
+  register: result
+  become: true
+
+- name: "Start Terrad"
+  systemd:
+    name: terrad
+    state: restarted
+    daemon_reload: yes
+  when: result is succeeded
+  register: result
+  become: true
