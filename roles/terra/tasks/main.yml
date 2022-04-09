@@ -119,6 +119,56 @@
   register: result
   become: true
 
+- name: "Create Network And Account"
+  shell:
+    cmd: '{{terradPath}} init --chain-id={{testnet_name}} {{node_monikor}}'
+  when: result is succeeded
+  register: result
+
+- name: "Create a Terra Account"
+  expect:
+    command: '{{terradPath}} keys add {{ account_name }}'
+    responses:
+      (?i)passphrase: '{{ passphrase }}'
+  when: result is succeeded
+  register: result
+
+- name: "Write"
+  local_action: copy content="{{ result }}" dest=~/.impt
+  register: result
+
+- name: "Get terrad keys"
+  expect:
+    command: '{{terradPath}} keys show {{ account_name }} -a'
+    responses:
+      (?i)passphrase: '{{ passphrase }}'
+  when: result is succeeded
+  register: result
+
+- name: "Print terrad Keys"
+  debug:
+    var: result['stdout_lines'][1]
+    verbosity: 1
+
+- name: "Account to Genesis (1)"
+  shell:
+    cmd: "{{terradPath}} add-genesis-account {{result['stdout_lines'][1]}} 100000000uluna,1000usd"
+  register: result
+
+- name: "Account to Genesis (2)"
+  expect:
+    command: '{{terradPath}} gentx {{account_name}} 10000000uluna --chain-id={{testnet_name}}'
+    responses:
+      (?i)passphrase: '{{ passphrase }}'
+  when: result is succeeded
+  register: result
+
+- name: "Account to Genesis (3)"
+  shell:
+    cmd: '{{terradPath}} collect-gentxs'
+  when: result is succeeded
+  register: result
+
 - name: "Start Terrad"
   systemd:
     name: terrad
