@@ -1,0 +1,16 @@
+owner: terradmin
+thome: /home/terradmin
+goURL: https://go.dev/dl/go1.18.linux-amd64.tar.gz
+goFile: go1.18.linux-amd64.tar.gz
+
+goDest: /usr/local
+goPath: /usr/local/go/bin
+
+goEnv: export PATH=$PATH:/usr/local/go/bin
+
+terraGit: https://github.com/terra-money/core/
+terraCoreDir: core
+
+ulimitPath: /etc/security/limits.conf
+
+terraService: /etc/systemd/system/terrad.service
